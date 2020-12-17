@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -61,6 +62,7 @@ public class Client {
                 return f(request, beanClass);
             }
             catch (Exception e) {
+            	System.out.println(e.toString());
                 if (timeUnit != null && timeOut != 0) {
                     try {
                         timeUnit.sleep(timeOut);
@@ -104,13 +106,20 @@ public class Client {
 
                                     // 对时间进行特殊处理
                                     Object value = item.get(j);
-//                                    System.out.println(value == null ? null : value.getClass());
+                                    //System.out.println(value == null ? null : value.getClass());
                                     switch (field.getType().getTypeName()) {
                                         case "java.time.LocalDate":
-                                            value = value == null ? null : LocalDate.parse((String) value, DateTimeFormatter.BASIC_ISO_DATE);
+                                        	try {
+                                        		value = value == null ? null : LocalDate.parse((String) value, DateTimeFormatter.ISO_LOCAL_DATE);
+                                        	} catch (DateTimeParseException e) {
+                                        		value = value == null ? null : LocalDate.parse((String) value, DateTimeFormatter.BASIC_ISO_DATE);
+                                        	}
                                             break;
                                     }
-
+//                                    if (value != null) {
+//                                    	System.out.println("Field " + fields.get(j) + " type " + field.getType().getTypeName()
+//                                    				+ " try to be set with value type " + value.getClass().getCanonicalName() + " value " + value);
+//                                    }
                                     field.set(bean, value);
                                 }
                                 beanList.add(bean);

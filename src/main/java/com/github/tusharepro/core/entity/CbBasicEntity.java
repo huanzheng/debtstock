@@ -41,7 +41,7 @@ public class CbBasicEntity implements CbBasic {
     @Column(name = "conv_price") protected Double convPrice;  // 最新转股价
     @Column(name = "rate_clause") protected String rateClause;  // 利率说明
     @Column(name = "put_clause") protected String putClause;  // 赎回条款
-    @Column(name = "maturity_put_price") protected String maturityPutPrice;  // 到期赎回价格(含税)
+    @Column(name = "maturity_put_price") protected Double maturityPutPrice;  // 到期赎回价格(含税)
     @Column(name = "call_clause") protected String callClause;  // 回售条款
     @Column(name = "reset_clause") protected String resetClause;  // 特别向下修正条款
     @Column(name = "conv_clause") protected String convClause;  // 转股条款
