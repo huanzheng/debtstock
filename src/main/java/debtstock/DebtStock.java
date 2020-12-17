@@ -1,6 +1,7 @@
 package debtstock;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.github.tusharepro.core.TusharePro;
 
@@ -12,7 +13,7 @@ public class DebtStock {
 
 		TusharePro.setGlobal(builder.build());  // 设置全局配置
 		
-		ArrayList<BondMargin> matches = BondMargin.getMatches();
+		List<BondMargin> matches = BondMargin.getMatches2();
 		
 		System.out.println("Totally found " + matches.size() + " bond with margins");
 		int i = 0;
