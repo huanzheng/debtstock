@@ -15,7 +15,7 @@ public class BondMargin {
 	public CbBasicEntity cb;
 	public MarginDetailEntity margin;
 
-	public static ArrayList<BondMargin> getMatches() {
+	public static List<BondMargin> getMatches() {
 		ArrayList<BondMargin> ret = new ArrayList<BondMargin>();
 		List<MarginDetailEntity> margins = null;
 		List<CbBasicEntity> bonds = null;
@@ -37,10 +37,12 @@ public class BondMargin {
 			e1.printStackTrace();
 		}
 		
+		LocalDate now = LocalDate.now();
 		if (margins != null && bonds != null) {
-			for (MarginDetailEntity margin: margins) {
-				for (CbBasicEntity bond: bonds) {
-					if (margin.getTsCode().equals(bond.getStkCode())) {
+			for (CbBasicEntity bond: bonds) {
+				for (MarginDetailEntity margin: margins) {
+					if ((bond.getDelistDate() == null || now.isBefore(bond.getDelistDate()))
+							&& margin.getTsCode().equals(bond.getStkCode())) {
 						BondMargin match = new BondMargin();
 						match.cb = bond;
 						match.margin = margin;
@@ -49,8 +51,9 @@ public class BondMargin {
 				}
 			}
 		}
-		
-		return ret;
+		return ret.stream()
+				.sorted((l,r) -> l.cb.getTsCode().compareTo(r.cb.getTsCode()))
+				.collect(Collectors.toList());
 	}
 	
 	public static List<BondMargin> getMatches2() {
@@ -74,6 +77,7 @@ public class BondMargin {
 						match.margin = margins.stream().filter(margin -> margin.getTsCode().equals(cb.getStkCode())).findAny().get();
 						return match;
 					})
+					.sorted((l,r) -> l.cb.getTsCode().compareTo(r.cb.getTsCode()))
 					.collect(Collectors.toList());
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
