@@ -3,6 +3,7 @@ package debtstock;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
@@ -99,8 +100,8 @@ public class BondMargin {
 		return ret;
 	}
 	
-	public static void fillPrices(List<BondMargin> bondMargins) {
-		final String dateStr = getLastWorkingDayOfMonth(LocalDate.now()).format(DateTimeFormatter.ofPattern(FORMAT_INPUTDATE));
+	public static void fillPrices(List<BondMargin> bondMargins, LocalDate tradeDate) {
+		String dateStr = tradeDate.format(DateTimeFormatter.ofPattern(BondMargin.FORMAT_INPUTDATE));
 		try {
 			List<DailyEntity> stockPrices = TushareProService.daily(new Request<DailyEntity>() {}
 												.param("trade_date", dateStr)
@@ -108,12 +109,14 @@ public class BondMargin {
 												.stream()
 												.sorted((l,r) -> r.getTsCode().compareTo(l.getTsCode()))
 										        .collect(Collectors.toList());
+			System.out.println("Got " + stockPrices.size() + " stockPrices");
 			
 			List<CbDailyEntity> cbPrices = TushareProService.cbDaily(new Request<CbDailyEntity>() {}
 												.param("trade_date", dateStr)
 										        ).stream()  
 												.sorted((l,r) -> r.getTsCode().compareTo(l.getTsCode()))
 										        .collect(Collectors.toList());
+			System.out.println("Got " + cbPrices.size() + " bondPrices");
 			
 			bondMargins.stream()
 						.forEach(bondMargin -> {
@@ -145,9 +148,14 @@ public class BondMargin {
 	  */
 	public static LocalDate getLastWorkingDayOfMonth(LocalDate lastDayOfMonth) {
 	    LocalDate lastWorkingDayofMonth;
+	    int hourOfDay = LocalDateTime.now().getHour();
 	    switch (DayOfWeek.of(lastDayOfMonth.get(ChronoField.DAY_OF_WEEK))) {
 	   		case MONDAY:
-	   			lastWorkingDayofMonth = lastDayOfMonth.minusDays(3);
+	   			if (hourOfDay < 15) {
+	   				lastWorkingDayofMonth = lastDayOfMonth.minusDays(3);
+	   			} else {
+	   				lastWorkingDayofMonth = lastDayOfMonth;
+	   			}
 	   			break;
 	   		case SATURDAY:
 	   			lastWorkingDayofMonth = lastDayOfMonth.minusDays(1);
@@ -156,7 +164,11 @@ public class BondMargin {
 	   			lastWorkingDayofMonth = lastDayOfMonth.minusDays(2);
 	   			break;
 	   		default:
-	   			lastWorkingDayofMonth = lastDayOfMonth;
+	   			if (hourOfDay < 15) {
+	   				lastWorkingDayofMonth = lastDayOfMonth.minusDays(1);
+	   			} else {
+	   				lastWorkingDayofMonth = lastDayOfMonth;
+	   			}
 	    }
 	    return lastWorkingDayofMonth;
 	}
@@ -179,5 +191,62 @@ public class BondMargin {
 			yjlv = 10000.0;
 			System.out.println("Missing information");
 		}
+	}
+	
+	public static List<BondMargin> getYjlvHistory(String tsCode, String startDateStr, String endDateStr) {
+		List<BondMargin> ret = null;
+		try {
+				CbBasicEntity cb = TushareProService.cbBasic(new Request<CbBasicEntity>() {}
+					.param("ts_code", tsCode)
+			        .allFields()  // 所有字段
+			        ).stream()
+					.collect(Collectors.toList()).get(0);
+				
+				List<DailyEntity> stockPrices = TushareProService.daily(new Request<DailyEntity>() {}
+					.param("start_date", startDateStr)
+					.param("end_date", endDateStr)
+					.param("ts_code", cb.getStkCode())
+					)
+					.stream()
+					.collect(Collectors.toList());
+				System.out.println("Got " + stockPrices.size() + " stockPrices");
+
+				List<CbDailyEntity> cbPrices = TushareProService.cbDaily(new Request<CbDailyEntity>() {}
+					.param("start_date", startDateStr)
+					.param("end_date", endDateStr)
+					.param("ts_code", cb.getTsCode())
+			        )
+					.stream()  
+					.collect(Collectors.toList());
+				System.out.println("Got " + cbPrices.size() + " bondPrices");
+				
+				ret = stockPrices.stream().map(stockPrice -> {
+					BondMargin match = new BondMargin();
+					match.cb = cb;
+					match.stockPrice = stockPrice;
+					Optional<CbDailyEntity> cbDaily = cbPrices.stream().filter(cbPrice -> cbPrice.getTradeDate().equals(stockPrice.getTradeDate())).findFirst();
+					if (cbDaily.isPresent()) {
+						match.cbPrice = cbDaily.get();
+					} else {
+						System.out.println("Missing bond trade info " + stockPrice.getTradeDate());
+						match = null;
+					}
+					return match;
+				}).collect(Collectors.toList());
+				
+				ret.stream().forEach(it -> it.calYjl());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		return ret;	
+	}
+	
+	public static List<BondMargin> getYjlvHistory(String tsCode, LocalDate endDate, int daysBefore) {
+		LocalDate startDate = endDate.minusDays(daysBefore);
+		String startDateStr = startDate.format(DateTimeFormatter.ofPattern(BondMargin.FORMAT_INPUTDATE));
+		String endDateStr = endDate.format(DateTimeFormatter.ofPattern(BondMargin.FORMAT_INPUTDATE));
+		return getYjlvHistory(tsCode, startDateStr, endDateStr);
 	}
 }
