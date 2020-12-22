@@ -38,21 +38,45 @@ public class DebtStock {
 	
 	public static void getYiJiaLvHistory() {
 		LocalDate endDate = BondMargin.getLastWorkingDayOfMonth(LocalDate.now());
-		int daysBefore = 30;
+		int daysBefore = 200;
 		String tsCode = "113008.SH";
 		List<BondMargin> history = BondMargin.getYjlvHistory(tsCode, endDate, daysBefore);
-		DecimalFormat df = new DecimalFormat("##.##");
-		System.out.println("股票代码" + " 股票名称" + " 可转债代码" + " 可转债名称" + " 溢价率" + " 交易日期" + " 债券价格" + " 正股价格" + " 债券面值" + " 转股价格");
+		BondMargin match1 = history.get(0);
+		System.out.println(match1.cb);
 
+		DecimalFormat df = new DecimalFormat("##.##");
+		System.out.printf(
+				"%-12s %-8s %-12s %-28s %-8s %-8s %-12s %-12s %-12s\n",
+				"股票代码",
+				"股票名称",
+				"可转债代码",
+				"可转债名称",
+				"债券面值",
+				"转股价格",
+				"转股起始日",
+				"转股截至日",
+				"到期时间");
+		System.out.printf(
+				"%-12s %-8s %-12s %-28s %-8s %-8s %-12s %-12s %-12s\n",
+				match1.cb.getStkCode(),
+				match1.cb.getStkShortName(), 
+				match1.cb.getTsCode(),
+				match1.cb.getBondFullName(),
+				match1.cb.getPar(),
+				match1.cb.getConvPrice(),
+				match1.cb.getConvStartDate(),
+				match1.cb.getConvEndDate(),
+				match1.cb.getMaturityDate());
+		
+		
+		System.out.printf("%-9s %-6s %-5s %-6s\n", "交易日期","溢价率","债券价格","正股价格");
 		for(BondMargin match : history) {
-			System.out.println(match.cb.getStkCode() + " " + match.cb.getStkShortName() 
-						+ " " + match.cb.getTsCode() + " " + match.cb.getBondFullName()
-						+ " " + df.format(match.yjlv) + "%"
-						+ " " + match.cbPrice.getTradeDate()
-						+ " " + match.cbPrice.getClose()
-						+ " " + match.stockPrice.getClose()
-						+ " " + match.cb.getPar()
-						+ " " + match.cb.getConvPrice()
+			System.out.printf(
+					"%-12s %-8s %-8s %-8s\n",
+					match.cbPrice.getTradeDate()
+						, df.format(match.yjlv) + "%"
+						, df.format(match.cbPrice.getClose())
+						, df.format(match.stockPrice.getClose())
 						);
 		}
 	}
