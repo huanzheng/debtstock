@@ -13,8 +13,8 @@ public class DebtStock {
 		        .setToken(Hidden.token);  // 你的token
 
 		TusharePro.setGlobal(builder.build());  // 设置全局配置
-		//sortCbWithMargins();
-		getYiJiaLvHistory();
+		sortCbWithMargins();
+		//getYiJiaLvHistory();
 	}
 	
 	public static void sortCbWithMargins() {
@@ -39,7 +39,7 @@ public class DebtStock {
 	public static void getYiJiaLvHistory() {
 		LocalDate endDate = BondMargin.getLastWorkingDayOfMonth(LocalDate.now());
 		int daysBefore = 200;
-		String tsCode = "113008.SH";
+		String tsCode = "113543.SH";
 		List<BondMargin> history = BondMargin.getYjlvHistory(tsCode, endDate, daysBefore);
 		BondMargin match1 = history.get(0);
 		System.out.println(match1.cb);

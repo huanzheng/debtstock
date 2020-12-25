@@ -18,6 +18,9 @@ import com.github.tusharepro.core.entity.DailyEntity;
 import com.github.tusharepro.core.entity.MarginDetailEntity;
 import com.github.tusharepro.core.http.Request;
 
+import lombok.Data;
+
+@Data
 public class BondMargin {
 	public CbBasicEntity cb = null;
 	public MarginDetailEntity margin = null;
@@ -232,7 +235,8 @@ public class BondMargin {
 						match = null;
 					}
 					return match;
-				}).collect(Collectors.toList());
+				}).filter(it -> it != null)
+				  .collect(Collectors.toList());
 				
 				ret.stream().forEach(it -> it.calYjl());
 		} catch (IOException e1) {
