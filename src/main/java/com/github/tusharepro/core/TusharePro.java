@@ -23,7 +23,7 @@ public class TusharePro {
     	private static final String API_URL = "http://api.waditu.com";
         private static final MediaType MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
         private static final OkHttpClient DEFAULT_HTTP_CLIENT = new OkHttpClient.Builder()
-                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC))
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.NONE)) //TODO, may need to change, if logging should be enabled
                 .connectTimeout(42, TimeUnit.SECONDS)
                 .writeTimeout(42, TimeUnit.SECONDS)
                 .readTimeout(42, TimeUnit.SECONDS)

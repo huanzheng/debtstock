@@ -33,5 +33,6 @@ public class FundNavEntity implements FundNav {
     @Column(name = "net_asset") protected Double netAsset;  // 资产净值
     @Column(name = "total_netasset") protected Double totalNetasset;  // 合计资产净值
     @Column(name = "adj_nav") protected Double adjNav;  // 复权单位净值
+    @Column(name = "update_flag") protected String updateFlag;  // TS代码
 
 }

@@ -1,5 +1,7 @@
 package com.github.tusharepro.core.bean;
 
+import javax.persistence.Column;
+
 import com.github.tusharepro.core.http.BaseRequestParam;
 
 /**
@@ -20,6 +22,7 @@ public interface FundNav extends BaseBean {
         String net_asset = "net_asset";  // 资产净值
         String total_netasset = "total_netasset";  // 合计资产净值
         String adj_nav = "adj_nav";  // 复权单位净值
+        String update_flag = "update_flag";
     }
 
     interface Params {
