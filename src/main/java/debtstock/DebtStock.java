@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,9 @@ public class DebtStock {
 
 		TusharePro.setGlobal(builder.build());  // 设置全局配置
 		//sortCbWithMargins();
-		getFundsNav();
+		//getFundsNav();
+		
+		getFundsHistoryAvg(800);
 	}
 	
 	public static void sortCbWithMargins() {
@@ -124,30 +127,75 @@ public class DebtStock {
 			}
 	}
 	
+	private static List<FundNavEntity> getFundNavHistory(String tsCode) {
+		try {
+			List<FundNavEntity> fundNavs = TushareProService.fundNav(new Request<FundNavEntity>() {}
+				//.param("end_date", dateStr)
+				.param("ts_code",tsCode)
+		        ).stream()
+				.collect(Collectors.toList());
+				
+				
+				//fundNavs.stream().forEach(System.out::println);
+				System.out.println("Got " + fundNavs.size() + " items for " + tsCode);
+				return fundNavs;
+			} catch (IOException e) {
+				return null;
+			}
+	}
+	
 	public static void getFundsNav() {
 		LocalDate date = BondMargin.getLastWorkingDayOfMonth(LocalDate.now());
 		String dateStr = date.format(DateTimeFormatter.ofPattern(BondMargin.FORMAT_INPUTDATE));
-		dateStr = "20210329";
+		dateStr = "20210406";
 		
-		String[] tsCodes = {"001714.OF", "001938.OF", "001216.OF", "110011.OF", "260108.OF", "110003.OF"};
+		String[] tsCodes = {"001714.OF", "001938.OF", "001216.OF", "110011.OF", "260108.OF", "110003.OF", "001410.OF"};
 		for(String tsCode : tsCodes)
 			getFundNav(tsCode, dateStr);
 		System.out.println();
 		
-		String[] tsCodes2 = {"519697.OF", "519732.OF", "270002.OF", "163402.SZ"};
+		String[] tsCodes2 = {"519697.OF", "519732.OF", "270002.OF", "163402.SZ", "001182.OF"};
 		for(String tsCode : tsCodes2)
 			getFundNav(tsCode, dateStr);
 		System.out.println();
 		
-		String[] tsCodes3 = {"002227.OF", "001316.OF", "320021.OF", "050023.OF", "001289.OF"};
+		String[] tsCodes3 = {"002227.OF", "001316.OF", "001289.OF", "001422.OF", "000171.OF", "320021.OF" };
 		for(String tsCode : tsCodes3)
 			getFundNav(tsCode, dateStr);
 		System.out.println();
 		
-		String[] tsCodes4 = {"217022.OF", "001868.OF", "000286.OF", "006947.OF"};
+		String[] tsCodes4 = {"217022.OF", "001868.OF", "000286.OF", "000024.OF"};
 		for(String tsCode : tsCodes4)
 			getFundNav(tsCode, dateStr);
 		System.out.println();
 
+	}
+	
+	public static void getFundsHistoryAvg(int days) {
+		String[] tsCodes = {"519697.OF", "519732.OF", "270002.OF", "001182.OF",   "002227.OF", "001316.OF", "001422.OF"};
+		List<FundNavEntity> sum = new ArrayList<FundNavEntity>();
+		for (int i = 0; i < days; i++) {
+			FundNavEntity e = new FundNavEntity();
+			e.setAccumNav((double) 0);
+			e.setUnitNav((double) 0);
+			sum.add(e);
+		}
+		
+		for(String tsCode : tsCodes) {
+			List<FundNavEntity> fundHistory = getFundNavHistory(tsCode);
+			for (int i = 0; i < days; i++) {
+				System.out.println("Adding " + fundHistory.get(i));
+				sum.get(i).setAccumNav(sum.get(i).getAccumNav() + fundHistory.get(i).getAccumNav());
+				sum.get(i).setUnitNav(sum.get(i).getUnitNav() + fundHistory.get(i).getUnitNav());
+				sum.get(i).setAnnDate(fundHistory.get(i).getAnnDate());
+				sum.get(i).setEndDate(fundHistory.get(i).getEndDate());
+			}
+		}
+		for (int i = 0; i < days; i++) {
+			sum.get(i).setAccumNav(sum.get(i).getAccumNav()/tsCodes.length);
+			sum.get(i).setUnitNav(sum.get(i).getUnitNav()/tsCodes.length);
+		}
+		
+		sum.stream().forEach(System.out::println);
 	}
 }
