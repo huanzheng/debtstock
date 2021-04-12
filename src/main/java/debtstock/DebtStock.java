@@ -147,7 +147,7 @@ public class DebtStock {
 	public static void getFundsNav() {
 		LocalDate date = BondMargin.getLastWorkingDayOfMonth(LocalDate.now());
 		String dateStr = date.format(DateTimeFormatter.ofPattern(BondMargin.FORMAT_INPUTDATE));
-		dateStr = "20210406";
+		dateStr = "20210409";
 		
 		String[] tsCodes = {"001714.OF", "001938.OF", "001216.OF", "110011.OF", "260108.OF", "110003.OF", "001410.OF"};
 		for(String tsCode : tsCodes)
@@ -172,7 +172,20 @@ public class DebtStock {
 	}
 	
 	public static void getFundsHistoryAvg(int days) {
-		String[] tsCodes = {"519697.OF", "519732.OF", "270002.OF", "001182.OF",   "002227.OF", "001316.OF", "001422.OF"};
+		//String[] tsCodes = {"519697.OF", "519732.OF", "270002.OF", "001182.OF",   "002227.OF", "001316.OF", "001422.OF"};
+		
+		/*String[] tsCodes = {
+				//"001714.OF", "001938.OF", "001216.OF", "110011.OF", "260108.OF", "110003.OF", "001410.OF",
+				"519697.OF", "519732.OF", "270002.OF", "001182.OF",
+				"002227.OF", "001316.OF",  "001422.OF", "000171.OF", "000215.OF"};*/
+		String[] tsCodes = {
+				"001714.OF", "001938.OF", "001216.OF", "110011.OF", "260108.OF", "110003.OF",
+				"519697.OF", "519732.OF", "270002.OF", "001182.OF",
+				"002227.OF", "001316.OF",  "001289.OF", "001422.OF", "000171.OF", "000215.OF"};
+		/*String[] tsCodes = {
+				//"001714.OF", "001938.OF", "001216.OF", "110011.OF", "260108.OF", "110003.OF", "001410.OF",
+				//"519697.OF", "519732.OF", "270002.OF", "001182.OF",
+				"002227.OF", "001316.OF", "001289.OF", "001422.OF", "000171.OF", "000215.OF"};*/
 		List<FundNavEntity> sum = new ArrayList<FundNavEntity>();
 		for (int i = 0; i < days; i++) {
 			FundNavEntity e = new FundNavEntity();
@@ -196,6 +209,48 @@ public class DebtStock {
 			sum.get(i).setUnitNav(sum.get(i).getUnitNav()/tsCodes.length);
 		}
 		
-		sum.stream().forEach(System.out::println);
+		for(FundNavEntity entity : sum) {
+			System.out.printf(entity.getAnnDate() + " %.2f" + " %.2f\n", entity.getUnitNav(),entity.getAccumNav());
+		}
+		
+		LocalDate maxDate = null;
+		LocalDate minDate = sum.get(0).getAnnDate();
+		double min=sum.get(0).getAccumNav();
+		double max = min;
+		
+		LocalDate maxWithDrawMaxDate = null;
+		LocalDate maxWithDrawMinDate = null;
+		double maxWithDrawMax = 0,maxWithDrawMin=0;
+		double maxWithdraw = 0;
+		
+		for (FundNavEntity entity: sum) {
+			if (entity.getAccumNav() > max) {
+				max = entity.getAccumNav();
+				maxDate = entity.getAnnDate();
+				//System.out.println("Setting max " + maxDate + " " + max);
+			}
+			
+			if (entity.getAccumNav() < min) {
+				if (maxDate != null) {
+					double withdraw = (max-min)/max;
+					System.out.printf("Found a slop maxDate:" + maxDate + " maxValue:%.2f, minDate:" + minDate + " minValue:%.2f, withDraw percentage:%.2f\n",max,min,withdraw);
+					if (withdraw > maxWithdraw) {
+						maxWithdraw = withdraw;
+						maxWithDrawMaxDate = maxDate;
+						maxWithDrawMinDate = minDate;
+						maxWithDrawMax = max;
+						maxWithDrawMin = min;
+					}
+				}
+				
+				maxDate = null;
+				minDate = entity.getAnnDate();
+				min = entity.getAccumNav();
+				max = min;
+				//System.out.println("Setting min " + minDate + " " + min);
+			}
+		}
+		
+		System.out.printf("MaxWithDraw maxDate:" + maxWithDrawMaxDate + " maxValue:%.2f, minDate:" + maxWithDrawMinDate + " minValue:%.2f, withDraw percentage:%.2f\n",maxWithDrawMax,maxWithDrawMin,maxWithdraw);
 	}
 }
